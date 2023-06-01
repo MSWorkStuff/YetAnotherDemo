@@ -15,20 +15,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.flow.onEach
 import openai.azure.R
 import openai.azure.ui.services.OpenAIService
 import openai.azure.ui.theme.JavaDemoTheme
@@ -60,13 +58,9 @@ fun CenterColumn(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.Center,
     ) {
         var text by remember { mutableStateOf(TextFieldValue("")) }
-        var uiState = viewModel.uiState.collectAsState().value
+        val completions = viewModel.completions.observeAsState()
 
 
-        when(uiState) {
-            is UIState.Loading -> {}
-            is UIState.CompletionsReady -> {}
-        }
         TextField(
             value = text,
             onValueChange = {
@@ -76,18 +70,27 @@ fun CenterColumn(viewModel: MainViewModel) {
             placeholder = { Text(text = stringResource(id = R.string.description_label)) },
         )
         
-        Button(onClick = {
-                viewModel.getCompletions(text.text)
-        }) {
+        Button(
+            onClick = { viewModel.getCompletions(text.text) },
+            modifier = Modifier.padding(16.dp)
+        ) {
             Text(text = "Submit")
         }
+
+        Text(
+            text = viewModel.asString(completions.value),
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
+    val openAIService = OpenAIService()
+    val viewModel = MainViewModel(openAIService)
+
     JavaDemoTheme {
-        CenterColumn()
+        CenterColumn(viewModel)
     }
 }

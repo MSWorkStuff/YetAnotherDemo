@@ -1,5 +1,7 @@
 package openai.azure.ui.views
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.azure.ai.openai.models.Completions
@@ -11,21 +13,15 @@ import openai.azure.ui.services.OpenAIService
 
 class MainViewModel(private val openAIService: OpenAIService): ViewModel() {
 
-    private val _uiState = MutableStateFlow<UIState>(UIState.Loading)
-    val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+    private val _completions = MutableLiveData<Completions>()
+    val completions: LiveData<Completions> get() = _completions
 
     fun getCompletions(prompt: String) {
         viewModelScope.launch {
-            _uiState.emit(UIState.Loading)
-            val completions = openAIService.getCompletions(prompt)
-            _uiState.emit(UIState.CompletionsReady(completions))
+            val completionsResponse = openAIService.getCompletions(prompt)
+            _completions.value = completionsResponse
         }
     }
 
-}
-
-sealed class UIState {
-    object Loading: UIState()
-    class CompletionsReady(val completions: Completions): UIState()
-
+    fun asString(completions: Completions?): String = completions?.let { it.choices[0].text } ?: ""
 }

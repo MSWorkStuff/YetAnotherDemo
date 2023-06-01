@@ -18,6 +18,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,21 +49,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        bindUIState(viewModel)
-    }
-
-    private fun bindUIState(viewModel: MainViewModel) {
-        viewModel.uiState.onEach {uiState: UIState ->
-            when(uiState) {
-                is UIState.Loading -> {
-                    // TODO reflect in UI
-                }
-                is UIState.CompletionsReady -> {
-                    val completions = uiState.completions
-                    // TODO: reflect in UI
-                }
-            }
-        }
     }
 }
 
@@ -74,7 +60,13 @@ fun CenterColumn(viewModel: MainViewModel) {
         verticalArrangement = Arrangement.Center,
     ) {
         var text by remember { mutableStateOf(TextFieldValue("")) }
-        
+        var uiState = viewModel.uiState.collectAsState().value
+
+
+        when(uiState) {
+            is UIState.Loading -> {}
+            is UIState.CompletionsReady -> {}
+        }
         TextField(
             value = text,
             onValueChange = {
